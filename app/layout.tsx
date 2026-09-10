@@ -7,9 +7,9 @@ const geistSans = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' })
 
 export const metadata: Metadata = {
-  title: 'HYPEPOT — Real-Time Holder Raffle on Hyperliquid',
+  title: 'THE PAD — Launch stock-paired coins on Hyperliquid',
   description:
-    'Trading fees pool into a live jackpot. Every round, one HYPE holder is drawn at random on the spin. No repeat winners.',
+    'Deploy coins paired with real stocks. A share of every coin\u2019s trading fees is paid back to holders on a live roulette spin. No repeat winners.',
   generator: 'v0.app',
 }
 

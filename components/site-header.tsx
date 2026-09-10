@@ -1,42 +1,43 @@
-import { Flame } from 'lucide-react'
+'use client'
 
-export function SiteHeader() {
+import { Rocket, Plus } from 'lucide-react'
+
+type Props = {
+  onCreate: () => void
+  onHome: () => void
+}
+
+export function SiteHeader({ onCreate, onHome }: Props) {
   return (
-    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <div className="flex items-center gap-2.5">
-          <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Flame className="size-5" aria-hidden />
+        <button onClick={onHome} className="flex items-center gap-2.5 outline-none" aria-label="The Pad home">
+          <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-[0_0_20px_-4px_var(--color-primary)]">
+            <Rocket className="size-5" aria-hidden />
           </span>
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-mono text-lg font-bold tracking-tight">HYPEPOT</span>
-            <span className="hidden text-xs font-medium text-muted-foreground sm:inline">
-              on Hyperliquid
+          <div className="flex flex-col items-start leading-none">
+            <span className="font-mono text-lg font-extrabold tracking-tight text-glow">THE PAD</span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+              stock-paired · hyperliquid
             </span>
           </div>
-        </div>
+        </button>
 
-        <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
-          <a href="#pot" className="transition-colors hover:text-foreground">
-            The Pot
-          </a>
-          <a href="#spin" className="transition-colors hover:text-foreground">
-            Live Spin
-          </a>
-          <a href="#holders" className="transition-colors hover:text-foreground">
-            Holders
-          </a>
-          <a href="#winners" className="transition-colors hover:text-foreground">
-            Winners
-          </a>
-        </nav>
-
-        <div className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5">
-          <span className="relative flex size-2">
-            <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-70" />
-            <span className="relative inline-flex size-2 rounded-full bg-primary" />
-          </span>
-          <span className="text-xs font-medium text-primary">Live</span>
+        <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 sm:flex">
+            <span className="relative flex size-2">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-70" />
+              <span className="relative inline-flex size-2 rounded-full bg-primary" />
+            </span>
+            <span className="text-xs font-medium text-primary">Live fees</span>
+          </div>
+          <button
+            onClick={onCreate}
+            className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03] active:scale-95"
+          >
+            <Plus className="size-4" aria-hidden />
+            Deploy coin
+          </button>
         </div>
       </div>
     </header>

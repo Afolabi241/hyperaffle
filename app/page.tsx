@@ -1,11 +1,12 @@
-import { Dashboard } from '@/components/dashboard'
+import { PadApp } from '@/components/pad-app'
 import { getHypeMarket } from '@/lib/hyperliquid'
-import { getHolders } from '@/lib/holders'
+import { getCoins } from '@/lib/coins'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Page() {
-  const [market, holders] = await Promise.all([getHypeMarket(), Promise.resolve(getHolders())])
+  const market = await getHypeMarket()
+  const coins = getCoins()
 
-  return <Dashboard initial={{ market, holders, totalHolders: holders.length }} />
+  return <PadApp initialMarket={market} coins={coins} />
 }

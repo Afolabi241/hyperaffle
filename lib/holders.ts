@@ -3,13 +3,14 @@
 // win twice. Wallets are auto-enrolled — there is no connect step.
 //
 // NOTE: Hyperliquid's public API does not expose a token's full holder list,
-// so this pool is generated deterministically for the demo. To go live with
-// real holders, replace `getHolders()` with a call to a HyperEVM holder
-// indexer / explorer that returns { address, balance } records — the rest of
-// the app (raffle, spin, no-repeat logic) already treats it as the source.
+// so this pool is generated deterministically per coin. To go live with real
+// holders, replace `makeHolders()` with a call to a HyperEVM holder indexer /
+// explorer that returns { address, balance } records — the rest of the app
+// (raffle, spin, no-repeat logic) already treats it as the source.
 
 export type Holder = {
   address: string
+  short: string
   balance: number
 }
 
@@ -32,14 +33,15 @@ function makeAddress(rand: () => number): string {
   return addr
 }
 
-export function getHolders(count = 120): Holder[] {
-  const rand = mulberry32(0x48595045) // "HYPE"
+export function makeHolders(count = 120, seed = 0x48595045): Holder[] {
+  const rand = mulberry32(seed)
   const holders: Holder[] = []
   for (let i = 0; i < count; i++) {
     // Skewed distribution: a few whales, a long tail of small holders.
     const r = rand()
     const balance = Math.round(500 + Math.pow(r, 3) * 480_000)
-    holders.push({ address: makeAddress(rand), balance })
+    const address = makeAddress(rand)
+    holders.push({ address, short: `${address.slice(0, 6)}…${address.slice(-4)}`, balance })
   }
   return holders.sort((a, b) => b.balance - a.balance)
 }
