@@ -1,9 +1,9 @@
 'use client'
 
-import { type Coin, coinEconomics } from '@/lib/coins'
+import { type Coin, coinEconomics, intervalLabel } from '@/lib/coins'
 import type { HypeMarket } from '@/lib/hyperliquid'
 import { usd, num, timeAgo } from '@/lib/format'
-import { Users, Link2, Gift } from 'lucide-react'
+import { Users, Link2, Gift, Timer } from 'lucide-react'
 
 type Props = {
   coin: Coin
@@ -44,9 +44,15 @@ export function CoinCard({ coin, coins, market, onSelect }: Props) {
 
       {/* reward pot highlight */}
       <div className="mt-4 rounded-xl border border-primary/25 bg-primary/5 p-3">
-        <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-primary">
-          <Gift className="size-3.5" aria-hidden />
-          Holder reward pot
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-primary">
+            <Gift className="size-3.5" aria-hidden />
+            Holder reward pot
+          </div>
+          <span className="flex items-center gap-1 rounded-full border border-primary/25 bg-background/40 px-1.5 py-0.5 font-mono text-[10px] text-primary">
+            <Timer className="size-3" aria-hidden />
+            {intervalLabel(coin.raffleInterval)}
+          </span>
         </div>
         <p className="mt-0.5 font-mono text-xl font-extrabold tabular-nums text-glow">
           {usd(eco.pot, { cents: true })}

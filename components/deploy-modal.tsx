@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { STOCKS } from '@/lib/stocks'
-import { X, Rocket, Search, Check } from 'lucide-react'
+import { RAFFLE_INTERVALS } from '@/lib/coins'
+import { X, Rocket, Search, Check, Timer } from 'lucide-react'
 
 export type DeployInput = {
   name: string
   ticker: string
   stockSymbol: string
   feeShare: number
+  raffleInterval: number
 }
 
 type Props = {
@@ -22,6 +24,7 @@ export function DeployModal({ open, onClose, onDeploy }: Props) {
   const [ticker, setTicker] = useState('')
   const [stockSymbol, setStockSymbol] = useState('')
   const [feeShare, setFeeShare] = useState(40)
+  const [raffleInterval, setRaffleInterval] = useState(120)
   const [q, setQ] = useState('')
 
   useEffect(() => {
@@ -30,6 +33,7 @@ export function DeployModal({ open, onClose, onDeploy }: Props) {
       setTicker('')
       setStockSymbol('')
       setFeeShare(40)
+      setRaffleInterval(120)
       setQ('')
     }
   }, [open])
@@ -101,6 +105,32 @@ export function DeployModal({ open, onClose, onDeploy }: Props) {
             />
           </div>
 
+          {/* raffle interval */}
+          <div className="mt-5">
+            <div className="mb-2 flex items-center gap-1.5">
+              <Timer className="size-3.5 text-muted-foreground" aria-hidden />
+              <span className="text-xs font-medium text-muted-foreground">Raffle fees every</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+              {RAFFLE_INTERVALS.map((iv) => {
+                const active = iv.seconds === raffleInterval
+                return (
+                  <button
+                    key={iv.seconds}
+                    onClick={() => setRaffleInterval(iv.seconds)}
+                    className={`rounded-xl border px-2 py-2 text-center font-mono text-xs font-semibold transition-colors ${
+                      active
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border bg-background text-muted-foreground hover:border-primary/40'
+                    }`}
+                  >
+                    {iv.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           {/* stock picker */}
           <div className="mt-5">
             <div className="mb-2 flex items-center justify-between">
@@ -144,7 +174,7 @@ export function DeployModal({ open, onClose, onDeploy }: Props) {
         <div className="border-t border-border/60 px-5 py-4">
           <button
             disabled={!canDeploy}
-            onClick={() => canDeploy && onDeploy({ name: name.trim(), ticker: ticker.trim(), stockSymbol, feeShare: feeShare / 100 })}
+            onClick={() => canDeploy && onDeploy({ name: name.trim(), ticker: ticker.trim(), stockSymbol, feeShare: feeShare / 100, raffleInterval })}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-transform enabled:hover:scale-[1.01] enabled:active:scale-95 disabled:opacity-40"
           >
             <Rocket className="size-4" aria-hidden />

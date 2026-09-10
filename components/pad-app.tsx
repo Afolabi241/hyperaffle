@@ -47,6 +47,7 @@ export function PadApp({
       progress: 0.02,
       holderCount: 12 + Math.floor(Math.random() * 20),
       feeShare: input.feeShare,
+      raffleInterval: input.raffleInterval,
       volumeWeight: 0.2 + Math.random() * 0.5,
       color: COIN_COLORS[Math.floor(Math.random() * COIN_COLORS.length)],
     }

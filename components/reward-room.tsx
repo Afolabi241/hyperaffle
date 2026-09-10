@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
-import { type Coin, coinEconomics, coinHolders } from '@/lib/coins'
+import { type Coin, coinEconomics, coinHolders, intervalLabel } from '@/lib/coins'
 import type { HypeMarket } from '@/lib/hyperliquid'
 import type { Holder } from '@/lib/holders'
 import { usd, num } from '@/lib/format'
@@ -17,13 +17,19 @@ type Props = {
 }
 
 type Phase = 'idle' | 'spinning' | 'result'
-const ROUND_SECONDS = 45
 
 type WinRecord = { holder: Holder; amount: number; at: number }
+
+function mmss(total: number): string {
+  const m = Math.floor(total / 60)
+  const s = total % 60
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
 
 export function RewardRoom({ coin, coins, market, onBack }: Props) {
   const eco = coinEconomics(coin, coins, market.dayNotionalVolume, market.feesCollected24h)
   const allHolders = useMemo(() => coinHolders(coin), [coin])
+  const roundSeconds = coin.raffleInterval
 
   const [eligible, setEligible] = useState<Holder[]>(allHolders)
   const [wonAddresses, setWonAddresses] = useState<Set<string>>(new Set())
@@ -31,7 +37,7 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
   const [currentWinner, setCurrentWinner] = useState<Holder | null>(null)
   const [spinId, setSpinId] = useState(0)
   const [phase, setPhase] = useState<Phase>('idle')
-  const [secondsLeft, setSecondsLeft] = useState(ROUND_SECONDS)
+  const [secondsLeft, setSecondsLeft] = useState(roundSeconds)
   const [overlay, setOverlay] = useState<WinRecord | null>(null)
 
   // Reset everything when switching to a different coin.
@@ -42,9 +48,9 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
     setCurrentWinner(null)
     setSpinId(0)
     setPhase('idle')
-    setSecondsLeft(ROUND_SECONDS)
+    setSecondsLeft(roundSeconds)
     setOverlay(null)
-  }, [coin.id, allHolders])
+  }, [coin.id, allHolders, roundSeconds])
 
   const phaseRef = useRef(phase)
   phaseRef.current = phase
@@ -87,10 +93,10 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
     }
     setTimeout(() => {
       setPhase('idle')
-      setSecondsLeft(ROUND_SECONDS)
+      setSecondsLeft(roundSeconds)
     }, 1200)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentWinner, eco.pot, allHolders, spinId])
+  }, [currentWinner, eco.pot, allHolders, spinId, roundSeconds])
 
   const spinning = phase === 'spinning'
 
@@ -129,6 +135,7 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
         <div className="flex gap-6">
           <HeaderStat label="24h volume" value={usd(eco.volume24h, { compact: true })} />
           <HeaderStat label="Fees to holders" value={`${Math.round(coin.feeShare * 100)}%`} />
+          <HeaderStat label="Raffle every" value={intervalLabel(coin.raffleInterval)} />
           <HeaderStat label="Holders" value={num(coin.holderCount)} />
         </div>
       </div>
@@ -148,7 +155,7 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
                 {spinning ? (
                   <span className="text-primary">Drawing…</span>
                 ) : (
-                  <span className="tabular-nums">Next draw in {secondsLeft}s</span>
+                  <span className="tabular-nums">Next draw in {mmss(secondsLeft)}</span>
                 )}
               </div>
             </div>
@@ -157,7 +164,7 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
               {usd(eco.pot, { cents: true })}
             </p>
             <p className="text-center text-xs text-muted-foreground">
-              {Math.round(coin.feeShare * 100)}% of {coin.ticker} trading fees · one random holder wins
+              {Math.round(coin.feeShare * 100)}% of {coin.ticker} trading fees · raffled every {intervalLabel(coin.raffleInterval)} · one random holder wins
             </p>
 
             <div className="mt-6">
@@ -193,7 +200,7 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
             </div>
             {winners.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
-                No winners yet — first draw in {secondsLeft}s.
+                No winners yet — first draw in {mmss(secondsLeft)}.
               </p>
             ) : (
               <ul className="flex flex-col gap-2">
