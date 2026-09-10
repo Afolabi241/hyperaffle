@@ -24,12 +24,21 @@ export function CoinCard({ coin, coins, market, onSelect }: Props) {
       {/* header: coin + paired stock */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span
-            className="grid size-11 place-items-center rounded-xl font-mono text-sm font-bold text-background"
-            style={{ background: coin.color }}
-          >
-            {coin.ticker.slice(0, 2)}
-          </span>
+          {coin.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={coin.image || "/placeholder.svg"}
+              alt={`${coin.ticker} logo`}
+              className="size-11 rounded-xl object-cover ring-1 ring-border"
+            />
+          ) : (
+            <span
+              className="grid size-11 place-items-center rounded-xl font-mono text-sm font-bold text-background"
+              style={{ background: coin.color }}
+            >
+              {coin.ticker.slice(0, 2)}
+            </span>
+          )}
           <div className="leading-tight">
             <p className="font-mono text-sm font-bold">{coin.ticker}</p>
             <p className="text-xs text-muted-foreground">{coin.name}</p>

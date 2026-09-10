@@ -113,12 +113,21 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
       {/* coin header */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border/70 card-glass p-5">
         <div className="flex items-center gap-4">
-          <span
-            className="grid size-14 place-items-center rounded-2xl font-mono text-lg font-bold text-background"
-            style={{ background: coin.color }}
-          >
-            {coin.ticker.slice(0, 2)}
-          </span>
+          {coin.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={coin.image || "/placeholder.svg"}
+              alt={`${coin.ticker} logo`}
+              className="size-14 rounded-2xl object-cover ring-1 ring-border"
+            />
+          ) : (
+            <span
+              className="grid size-14 place-items-center rounded-2xl font-mono text-lg font-bold text-background"
+              style={{ background: coin.color }}
+            >
+              {coin.ticker.slice(0, 2)}
+            </span>
+          )}
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-mono text-2xl font-extrabold">{coin.ticker}</h1>

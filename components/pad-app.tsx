@@ -50,6 +50,7 @@ export function PadApp({
       raffleInterval: input.raffleInterval,
       volumeWeight: 0.2 + Math.random() * 0.5,
       color: COIN_COLORS[Math.floor(Math.random() * COIN_COLORS.length)],
+      image: input.image ?? '/coins/default.png',
     }
     setCoins((prev) => [coin, ...prev])
     setDeployOpen(false)

@@ -17,6 +17,8 @@ export type Coin = {
   // Deterministic per-coin weight used to split pad-wide volume/fees
   volumeWeight: number
   color: string
+  // Coin logo image URL (generated for seed coins, uploaded on deploy)
+  image?: string
 }
 
 // Selectable raffle cadences shown in the deploy flow (seconds).
@@ -88,6 +90,7 @@ function buildCoin(
     raffleInterval,
     volumeWeight: 0.3 + rand() * 1.2,
     color: COLORS[index % COLORS.length],
+    image: `/coins/${ticker.toLowerCase()}.png`,
   }
 }
 

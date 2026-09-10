@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { STOCKS } from '@/lib/stocks'
 import { RAFFLE_INTERVALS } from '@/lib/coins'
-import { X, Rocket, Search, Check, Timer } from 'lucide-react'
+import { X, Rocket, Search, Check, Timer, ImagePlus } from 'lucide-react'
 
 export type DeployInput = {
   name: string
@@ -11,6 +11,7 @@ export type DeployInput = {
   stockSymbol: string
   feeShare: number
   raffleInterval: number
+  image?: string
 }
 
 type Props = {
@@ -25,7 +26,9 @@ export function DeployModal({ open, onClose, onDeploy }: Props) {
   const [stockSymbol, setStockSymbol] = useState('')
   const [feeShare, setFeeShare] = useState(40)
   const [raffleInterval, setRaffleInterval] = useState(120)
+  const [image, setImage] = useState<string | undefined>(undefined)
   const [q, setQ] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (open) {
@@ -34,9 +37,18 @@ export function DeployModal({ open, onClose, onDeploy }: Props) {
       setStockSymbol('')
       setFeeShare(40)
       setRaffleInterval(120)
+      setImage(undefined)
       setQ('')
     }
   }, [open])
+
+  const onPickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setImage(reader.result as string)
+    reader.readAsDataURL(file)
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -67,25 +79,53 @@ export function DeployModal({ open, onClose, onDeploy }: Props) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
-          <div className="grid grid-cols-2 gap-3">
-            <label className="col-span-1 flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Coin name</span>
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Tesla Rocket"
-                className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary/60"
-              />
-            </label>
-            <label className="col-span-1 flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Ticker</span>
-              <input
-                value={ticker}
-                onChange={(e) => setTicker(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
-                placeholder="TSLR"
-                className="rounded-xl border border-border bg-background px-3 py-2.5 font-mono text-sm uppercase outline-none focus:border-primary/60"
-              />
-            </label>
+          {/* coin logo + name/ticker */}
+          <div className="flex gap-3">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Logo</span>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="group relative grid size-[72px] shrink-0 place-items-center overflow-hidden rounded-2xl border border-dashed border-border bg-background transition-colors hover:border-primary/60"
+                aria-label="Upload coin logo"
+              >
+                {image ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={image || "/placeholder.svg"} alt="Coin logo preview" className="size-full object-cover" />
+                    <span className="absolute inset-0 hidden place-items-center bg-background/70 text-[10px] font-medium text-foreground group-hover:grid">
+                      Change
+                    </span>
+                  </>
+                ) : (
+                  <span className="flex flex-col items-center gap-1 text-muted-foreground">
+                    <ImagePlus className="size-5" aria-hidden />
+                    <span className="text-[10px]">Upload</span>
+                  </span>
+                )}
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" onChange={onPickImage} className="hidden" />
+            </div>
+            <div className="grid flex-1 grid-cols-2 gap-3">
+              <label className="col-span-2 flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-muted-foreground">Coin name</span>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Tesla Rocket"
+                  className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary/60"
+                />
+              </label>
+              <label className="col-span-2 flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-muted-foreground">Ticker</span>
+                <input
+                  value={ticker}
+                  onChange={(e) => setTicker(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
+                  placeholder="TSLR"
+                  className="rounded-xl border border-border bg-background px-3 py-2.5 font-mono text-sm uppercase outline-none focus:border-primary/60"
+                />
+              </label>
+            </div>
           </div>
 
           {/* fee share */}
@@ -174,7 +214,7 @@ export function DeployModal({ open, onClose, onDeploy }: Props) {
         <div className="border-t border-border/60 px-5 py-4">
           <button
             disabled={!canDeploy}
-            onClick={() => canDeploy && onDeploy({ name: name.trim(), ticker: ticker.trim(), stockSymbol, feeShare: feeShare / 100, raffleInterval })}
+            onClick={() => canDeploy && onDeploy({ name: name.trim(), ticker: ticker.trim(), stockSymbol, feeShare: feeShare / 100, raffleInterval, image })}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-transform enabled:hover:scale-[1.01] enabled:active:scale-95 disabled:opacity-40"
           >
             <Rocket className="size-4" aria-hidden />
