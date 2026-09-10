@@ -10,7 +10,7 @@ import { usd } from '@/lib/format'
 import { SiteHeader } from './site-header'
 import { PotHero } from './pot-hero'
 import { StatsBar } from './stats-bar'
-import { SpinReel } from './spin-reel'
+import { RouletteWheel } from './roulette-wheel'
 import { WinnersFeed, type Winner } from './winners-feed'
 import { HoldersPanel } from './holders-panel'
 
@@ -113,7 +113,7 @@ export function Dashboard({ initial }: Props) {
               </span>
             </div>
 
-            <SpinReel pool={eligible.length ? eligible : holders} spinId={spinId} winner={currentWinner} onSettled={handleSettled} />
+            <RouletteWheel pool={eligible.length ? eligible : holders} spinId={spinId} winner={currentWinner} onSettled={handleSettled} />
 
             <button
               type="button"
