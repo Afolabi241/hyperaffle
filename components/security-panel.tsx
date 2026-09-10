@@ -2,7 +2,7 @@
 
 import { NETWORK, VAULT, shortHash, isPlaceholder } from '@/lib/vault'
 import { usd } from '@/lib/format'
-import { ShieldCheck, ExternalLink, Lock, HandCoins, Clock, AlertTriangle } from 'lucide-react'
+import { ShieldCheck, ExternalLink, Lock, Send, Clock, AlertTriangle } from 'lucide-react'
 
 export function SecurityPanel({ potOnChain }: { potOnChain: number }) {
   const deployed = !isPlaceholder(VAULT.address)
@@ -24,7 +24,8 @@ export function SecurityPanel({ potOnChain }: { potOnChain: number }) {
           <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-gold" aria-hidden />
           <span>
             Running on {NETWORK.name}. All balances are test tokens with no real value. Funds are
-            never held by a person — the audited contract holds them and winners claim directly.
+            never held by a person — the audited contract holds them and pays each winner
+            automatically.
           </span>
         </div>
       )}
@@ -57,12 +58,13 @@ export function SecurityPanel({ potOnChain }: { potOnChain: number }) {
         <Guarantee icon={Lock}>
           No admin withdraw. There is no function that lets anyone drain user funds.
         </Guarantee>
-        <Guarantee icon={HandCoins}>
-          Pull-payment: winners claim their own prize, so one bad recipient can never freeze payouts.
+        <Guarantee icon={Send}>
+          Auto-airdrop: the contract pays each winner the moment they are drawn — no wallet connect,
+          no claiming.
         </Guarantee>
         <Guarantee icon={Clock}>
-          Unclaimed after {VAULT.claimWindowDays} days, a prize can be swept to the dev wallet for a
-          manual airdrop — never while it is still claimable.
+          Safety net: if an airdrop can&apos;t land, the prize is held and swept to the dev wallet
+          after {VAULT.claimWindowDays} days for a manual payout, so funds never get stuck.
         </Guarantee>
       </ul>
     </section>

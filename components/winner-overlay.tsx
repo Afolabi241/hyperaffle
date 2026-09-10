@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import type { Holder } from '@/lib/holders'
 import type { Coin } from '@/lib/coins'
 import { usd } from '@/lib/format'
-import { Trophy, X } from 'lucide-react'
+import { Trophy, X, Send } from 'lucide-react'
 
 type Props = {
   coin: Coin
@@ -75,8 +75,12 @@ export function WinnerOverlay({ coin, winner, amount, onClose }: Props) {
         </p>
 
         <div className="mt-5 rounded-xl border border-border bg-background/50 px-4 py-3">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Wallet</p>
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Airdropped to</p>
           <p className="font-mono text-lg font-bold">{winner.short}</p>
+          <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-primary">
+            <Send className="size-3" aria-hidden />
+            Paid automatically — no claim needed
+          </p>
         </div>
 
         <button

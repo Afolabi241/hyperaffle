@@ -8,23 +8,18 @@ import { usd, num } from '@/lib/format'
 import { RouletteWheel } from './roulette-wheel'
 import { WinnerOverlay } from './winner-overlay'
 import { SecurityPanel } from './security-panel'
-import { EligibilityCard } from './eligibility-card'
-import { claimDaysLeft } from '@/lib/vault'
-import { ArrowLeft, Link2, Users, Gift, Trophy, Zap, Timer, Check, HandCoins } from 'lucide-react'
+import { ArrowLeft, Link2, Users, Gift, Trophy, Zap, Timer, Send } from 'lucide-react'
 
 type Props = {
   coin: Coin
   coins: Coin[]
   market: HypeMarket
   onBack: () => void
-  wallet: string | null
-  onConnect: () => void
-  onDisconnect: () => void
 }
 
 type Phase = 'idle' | 'spinning' | 'result'
 
-type WinRecord = { id: number; holder: Holder; amount: number; at: number; claimed: boolean }
+type WinRecord = { id: number; holder: Holder; amount: number; at: number }
 
 function mmss(total: number): string {
   const m = Math.floor(total / 60)
@@ -32,7 +27,7 @@ function mmss(total: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-export function RewardRoom({ coin, coins, market, onBack, wallet, onConnect, onDisconnect }: Props) {
+export function RewardRoom({ coin, coins, market, onBack }: Props) {
   const eco = coinEconomics(coin, coins, market.dayNotionalVolume, market.feesCollected24h)
   const allHolders = useMemo(() => coinHolders(coin), [coin])
   const roundSeconds = coin.raffleInterval
@@ -111,7 +106,7 @@ export function RewardRoom({ coin, coins, market, onBack, wallet, onConnect, onD
     settledSpinRef.current = spinId
     setPhase('result')
     if (currentWinner) {
-      const rec: WinRecord = { id: spinId, holder: currentWinner, amount: eco.pot, at: Date.now(), claimed: false }
+      const rec: WinRecord = { id: spinId, holder: currentWinner, amount: eco.pot, at: Date.now() }
       setWinners((prev) => [rec, ...prev].slice(0, 12))
       setWonAddresses((prev) => new Set(prev).add(currentWinner.address))
       setEligible((prev) => {
@@ -128,12 +123,6 @@ export function RewardRoom({ coin, coins, market, onBack, wallet, onConnect, onD
   }, [currentWinner, eco.pot, allHolders, spinId, roundSeconds])
 
   const spinning = phase === 'spinning'
-
-  // Mirrors the contract's claimRound(): the winner pulls their own prize.
-  // Here it flips local state; on-chain this is a wallet transaction.
-  const claim = useCallback((id: number) => {
-    setWinners((prev) => prev.map((w) => (w.id === id ? { ...w, claimed: true } : w)))
-  }, [])
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
@@ -226,15 +215,13 @@ export function RewardRoom({ coin, coins, market, onBack, wallet, onConnect, onD
               {spinning ? 'Spinning…' : `Auto-draw in ${mmss(secondsLeft)}`}
             </div>
             <p className="mt-2 text-center text-[11px] text-muted-foreground">
-              Draws run automatically on-chain · {eligible.length} eligible · past winners removed (no repeat)
+              Draws run automatically · winner is paid instantly, no claiming · {eligible.length} eligible · past winners removed (no repeat)
             </p>
           </div>
         </section>
 
         {/* side column */}
         <div className="flex flex-col gap-5">
-          <EligibilityCard coin={coin} address={wallet} onConnect={onConnect} onDisconnect={onDisconnect} />
-
           <SecurityPanel potOnChain={eco.pot} />
 
           {/* winners */}
@@ -267,23 +254,10 @@ export function RewardRoom({ coin, coins, market, onBack, wallet, onConnect, onD
                         </span>
                       </div>
                     </div>
-                    {w.claimed ? (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
-                        <Check className="size-3" aria-hidden />
-                        Claimed
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => claim(w.id)}
-                        className="inline-flex shrink-0 flex-col items-center rounded-lg bg-primary px-3 py-1 text-[11px] font-semibold text-primary-foreground transition-transform hover:scale-105 active:scale-95"
-                      >
-                        <span className="inline-flex items-center gap-1">
-                          <HandCoins className="size-3" aria-hidden />
-                          Claim
-                        </span>
-                        <span className="text-[9px] font-normal opacity-80">{claimDaysLeft(w.at)}d left</span>
-                      </button>
-                    )}
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
+                      <Send className="size-3" aria-hidden />
+                      Airdropped
+                    </span>
                   </li>
                 ))}
               </ul>

@@ -9,7 +9,6 @@ import { StockTicker } from './stock-ticker'
 import { Launchpad } from './launchpad'
 import { RewardRoom } from './reward-room'
 import { DeployModal, type DeployInput } from './deploy-modal'
-import { WalletModal } from './wallet-modal'
 import { STOCKS } from '@/lib/stocks'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
@@ -33,8 +32,6 @@ export function PadApp({
   const [coins, setCoins] = useState<Coin[]>(initialCoins)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [deployOpen, setDeployOpen] = useState(false)
-  const [walletOpen, setWalletOpen] = useState(false)
-  const [wallet, setWallet] = useState<string | null>(null)
 
   const selected = coins.find((c) => c.id === selectedId) ?? null
 
@@ -65,9 +62,6 @@ export function PadApp({
       <SiteHeader
         onCreate={() => setDeployOpen(true)}
         onHome={() => setSelectedId(null)}
-        wallet={wallet}
-        onWallet={() => setWalletOpen(true)}
-        onDisconnect={() => setWallet(null)}
       />
       <StockTicker />
 
@@ -77,9 +71,6 @@ export function PadApp({
           coins={coins}
           market={market}
           onBack={() => setSelectedId(null)}
-          wallet={wallet}
-          onConnect={() => setWalletOpen(true)}
-          onDisconnect={() => setWallet(null)}
         />
       ) : (
         <Launchpad
@@ -94,12 +85,6 @@ export function PadApp({
         open={deployOpen}
         onClose={() => setDeployOpen(false)}
         onDeploy={handleDeploy}
-      />
-
-      <WalletModal
-        open={walletOpen}
-        onClose={() => setWalletOpen(false)}
-        onConnect={(addr) => setWallet(addr)}
       />
 
       <footer className="border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
