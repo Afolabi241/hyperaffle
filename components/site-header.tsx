@@ -1,13 +1,17 @@
 'use client'
 
-import { Rocket, Plus } from 'lucide-react'
+import { Rocket, Plus, Wallet } from 'lucide-react'
+import { shortAddr } from '@/lib/wallet'
 
 type Props = {
   onCreate: () => void
   onHome: () => void
+  wallet: string | null
+  onWallet: () => void
+  onDisconnect: () => void
 }
 
-export function SiteHeader({ onCreate, onHome }: Props) {
+export function SiteHeader({ onCreate, onHome, wallet, onWallet, onDisconnect }: Props) {
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
@@ -31,12 +35,31 @@ export function SiteHeader({ onCreate, onHome }: Props) {
             </span>
             <span className="text-xs font-medium text-primary">Live fees</span>
           </div>
+          {wallet ? (
+            <button
+              onClick={onDisconnect}
+              className="flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-2 font-mono text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+              title="Read-only · click to disconnect"
+            >
+              <Wallet className="size-4" aria-hidden />
+              {shortAddr(wallet)}
+            </button>
+          ) : (
+            <button
+              onClick={onWallet}
+              className="hidden items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 sm:flex"
+            >
+              <Wallet className="size-4" aria-hidden />
+              Check wallet
+            </button>
+          )}
           <button
             onClick={onCreate}
             className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03] active:scale-95"
           >
             <Plus className="size-4" aria-hidden />
-            Deploy coin
+            <span className="hidden sm:inline">Deploy coin</span>
+            <span className="sm:hidden">Deploy</span>
           </button>
         </div>
       </div>

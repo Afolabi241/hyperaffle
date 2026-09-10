@@ -8,6 +8,7 @@ import { usd, num } from '@/lib/format'
 import { RouletteWheel } from './roulette-wheel'
 import { WinnerOverlay } from './winner-overlay'
 import { SecurityPanel } from './security-panel'
+import { EligibilityCard } from './eligibility-card'
 import { claimDaysLeft } from '@/lib/vault'
 import { ArrowLeft, Link2, Users, Gift, Trophy, Zap, Timer, Check, HandCoins } from 'lucide-react'
 
@@ -16,6 +17,9 @@ type Props = {
   coins: Coin[]
   market: HypeMarket
   onBack: () => void
+  wallet: string | null
+  onConnect: () => void
+  onDisconnect: () => void
 }
 
 type Phase = 'idle' | 'spinning' | 'result'
@@ -28,7 +32,7 @@ function mmss(total: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-export function RewardRoom({ coin, coins, market, onBack }: Props) {
+export function RewardRoom({ coin, coins, market, onBack, wallet, onConnect, onDisconnect }: Props) {
   const eco = coinEconomics(coin, coins, market.dayNotionalVolume, market.feesCollected24h)
   const allHolders = useMemo(() => coinHolders(coin), [coin])
   const roundSeconds = coin.raffleInterval
@@ -210,6 +214,8 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
 
         {/* side column */}
         <div className="flex flex-col gap-5">
+          <EligibilityCard coin={coin} address={wallet} onConnect={onConnect} onDisconnect={onDisconnect} />
+
           <SecurityPanel potOnChain={eco.pot} />
 
           {/* winners */}
