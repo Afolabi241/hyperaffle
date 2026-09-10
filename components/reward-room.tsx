@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { type Coin, coinEconomics, coinHolders, intervalLabel } from '@/lib/coins'
+import { curveState } from '@/lib/curve'
 import type { HypeMarket } from '@/lib/hyperliquid'
 import type { Holder } from '@/lib/holders'
 import { usd, num } from '@/lib/format'
@@ -29,6 +30,7 @@ function mmss(total: number): string {
 
 export function RewardRoom({ coin, coins, market, onBack }: Props) {
   const eco = coinEconomics(coin, coins, market.dayNotionalVolume, market.feesCollected24h)
+  const curve = curveState(coin.progress)
   const allHolders = useMemo(() => coinHolders(coin), [coin])
   const roundSeconds = coin.raffleInterval
 
@@ -165,7 +167,12 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
             <p className="text-sm text-muted-foreground">{coin.name}</p>
           </div>
         </div>
-        <div className="flex gap-6">
+        <div className="flex flex-wrap gap-6">
+          <HeaderStat
+            label="Market cap"
+            value={usd(curve.marketCap, { compact: true })}
+            sub={curve.migrated ? 'migrated' : `${Math.round(curve.progress * 100)}% to $40k`}
+          />
           <HeaderStat label="24h volume" value={usd(eco.volume24h, { compact: true })} />
           <HeaderStat label="Fees to holders" value={`${Math.round(coin.feeShare * 100)}%`} />
           <HeaderStat label="Raffle every" value={intervalLabel(coin.raffleInterval)} />
@@ -306,11 +313,12 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
   )
 }
 
-function HeaderStat({ label, value }: { label: string; value: string }) {
+function HeaderStat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="text-right">
       <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="font-mono text-lg font-bold tabular-nums">{value}</p>
+      {sub ? <p className="text-[10px] text-primary">{sub}</p> : null}
     </div>
   )
 }

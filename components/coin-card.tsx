@@ -1,9 +1,10 @@
 'use client'
 
 import { type Coin, coinEconomics, intervalLabel } from '@/lib/coins'
+import { curveState, MIGRATION_MCAP } from '@/lib/curve'
 import type { HypeMarket } from '@/lib/hyperliquid'
 import { usd, num, timeAgo } from '@/lib/format'
-import { Users, Link2, Gift, Timer } from 'lucide-react'
+import { Users, Link2, Gift, Timer, Droplets, Rocket, CheckCircle2 } from 'lucide-react'
 
 type Props = {
   coin: Coin
@@ -14,7 +15,8 @@ type Props = {
 
 export function CoinCard({ coin, coins, market, onSelect }: Props) {
   const eco = coinEconomics(coin, coins, market.dayNotionalVolume, market.feesCollected24h)
-  const pctFull = Math.round(coin.progress * 100)
+  const curve = curveState(coin.progress)
+  const pctFull = Math.round(curve.progress * 100)
 
   return (
     <button
@@ -71,12 +73,47 @@ export function CoinCard({ coin, coins, market, onSelect }: Props) {
         </p>
       </div>
 
-      {/* bonding progress */}
+      {/* market cap + bonding progress */}
       <div className="mt-4">
-        <div className="mb-1 flex items-center justify-between text-[11px] text-muted-foreground">
-          <span>Bonding curve</span>
-          <span className="tabular-nums">{pctFull}%</span>
+        <div className="mb-1 flex items-end justify-between">
+          <div className="leading-tight">
+            <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">Market cap</span>
+            <span className="font-mono text-sm font-bold tabular-nums">{usd(curve.marketCap, { compact: true })}</span>
+          </div>
+          {curve.migrated ? (
+            <span className="flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              <CheckCircle2 className="size-3" aria-hidden />
+              Migrated
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <Rocket className="size-3" aria-hidden />
+              Migrates at {usd(MIGRATION_MCAP, { compact: true })}
+            </span>
+          )}
         </div>
+        <div className="h-2 overflow-hidden rounded-full bg-secondary">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-primary/70 to-primary transition-all"
+            style={{ width: `${pctFull}%` }}
+          />
+        </div>
+        <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
+          <span className="tabular-nums">{pctFull}% to migration</span>
+          <span className="flex items-center gap-1">
+            <Droplets className="size-3" aria-hidden />
+            {usd(curve.virtualLiquidity, { compact: true })} liquidity
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <Users className="size-3.5" aria-hidden />
+          {num(coin.holderCount)} holders
+        </span>
+        <span>{timeAgo(coin.createdAt)}</span>
+      </div>
         <div className="h-2 overflow-hidden rounded-full bg-secondary">
           <div
             className="h-full rounded-full bg-gradient-to-r from-primary/70 to-primary transition-all"
