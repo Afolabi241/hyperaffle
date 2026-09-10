@@ -29,9 +29,10 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
  *   TODO(auditor): confirm HyperEVM has a production VRF; prefer it over this
  *   if available.
  * - Payouts: pull-payment via claimRound(). Never pausable.
- * - Stale funds: a prize UNCLAIMED for CLAIM_WINDOW (90 days) can be swept to
- *   recoveryWallet. The sweep is impossible while a prize is still claimable, so
- *   it can only ever move genuinely abandoned funds — it can never rug a winner.
+ * - Stale funds: a prize UNCLAIMED for CLAIM_WINDOW (30 days) can be either
+ *   swept to recoveryWallet (dev wallet, for a manual airdrop) OR burned. Both
+ *   exits are impossible while a prize is still claimable, so they can only ever
+ *   move genuinely abandoned funds — they can never rug a winner.
  * - Admin: intended to be a multisig + timelock. Can pause deposits/draws in an
  *   emergency but CANNOT pause claims or seize a claimable prize.
  */
@@ -41,8 +42,11 @@ contract FeeRaffleVault is ReentrancyGuard, Pausable, AccessControl {
     bytes32 public constant FEE_ROUTER_ROLE = keccak256("FEE_ROUTER_ROLE");
     bytes32 public constant RANDOMNESS_ROLE = keccak256("RANDOMNESS_ROLE");
 
-    // A winner has this long to claim before their prize can be swept as stale.
-    uint256 public constant CLAIM_WINDOW = 90 days;
+    // A winner has this long to claim before their prize can be swept or burned.
+    uint256 public constant CLAIM_WINDOW = 30 days;
+
+    // Standard burn sink for the burn exit (tokens sent here are irrecoverable).
+    address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
 
     IERC20 public immutable prizeToken; // token prizes are paid in (e.g. USDC/HYPE)
 
@@ -72,6 +76,7 @@ contract FeeRaffleVault is ReentrancyGuard, Pausable, AccessControl {
     event WinnerDrawn(uint256 indexed roundId, address indexed winner, uint256 amount);
     event PrizeClaimed(uint256 indexed roundId, address indexed winner, uint256 amount);
     event StalePrizeSwept(uint256 indexed roundId, address indexed to, uint256 amount);
+    event StalePrizeBurned(uint256 indexed roundId, uint256 amount);
     event RecoveryWalletUpdated(address indexed wallet);
 
     constructor(IERC20 _prizeToken, address admin, address _recoveryWallet) {
@@ -160,19 +165,35 @@ contract FeeRaffleVault is ReentrancyGuard, Pausable, AccessControl {
         }
     }
 
-    /// @notice Sweep a prize left UNCLAIMED past CLAIM_WINDOW to the recovery
-    ///         (dev) wallet so no funds sit stuck forever. This is the ONLY way
-    ///         admin-side funds move, and it is impossible while the winner can
-    ///         still claim — so it can never take a live prize from a winner.
-    function sweepStalePrize(uint256 roundId) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
+    /// @notice Internal guard shared by both stale exits: a prize must have a
+    ///         winner, be unclaimed, and be past the claim window. Marks it
+    ///         claimed (same flag as a real claim) so it can move exactly once.
+    function _consumeStalePrize(uint256 roundId) internal returns (uint256 amount) {
         Round storage r = rounds[roundId];
         require(r.winner != address(0), "no winner");
         require(!r.claimed, "already claimed");
         require(block.timestamp >= r.drawnAt + CLAIM_WINDOW, "still claimable");
-        r.claimed = true; // same flag path as a claim: pays out exactly once
-        uint256 amount = r.pot;
+        r.claimed = true;
+        amount = r.pot;
+    }
+
+    /// @notice Exit A — sweep a prize left UNCLAIMED past CLAIM_WINDOW (30d) to
+    ///         the recovery (dev) wallet, so you can manually airdrop it. It is
+    ///         impossible while the winner can still claim, so it can never take
+    ///         a live prize from a winner.
+    function sweepStalePrize(uint256 roundId) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
+        uint256 amount = _consumeStalePrize(roundId);
         prizeToken.safeTransfer(recoveryWallet, amount);
         emit StalePrizeSwept(roundId, recoveryWallet, amount);
+    }
+
+    /// @notice Exit B — burn a prize left UNCLAIMED past CLAIM_WINDOW (30d) by
+    ///         sending it to the dead address. Same claim-window guard, so it
+    ///         can never burn a prize a winner can still claim.
+    function burnStalePrize(uint256 roundId) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
+        uint256 amount = _consumeStalePrize(roundId);
+        prizeToken.safeTransfer(BURN_ADDRESS, amount);
+        emit StalePrizeBurned(roundId, amount);
     }
 
     /// @notice Update the recovery wallet (multisig-gated). Emits for auditability.
