@@ -24,25 +24,43 @@ function hash(str: string): number {
   return h >>> 0
 }
 
+// A wallet must hold the coin continuously for this long before it qualifies
+// for a draw. Prevents last-second buy-ins right before a spin.
+export const HOLD_MINUTES = 10
+
 export type Eligibility = {
-  eligible: boolean
+  // Holds a non-zero balance of the coin.
+  holds: boolean
+  // Holds AND has met the minimum hold time → actually entered in draws.
+  qualified: boolean
   balance: number
-  // Equal-ticket odds of winning a given round (1 / eligible holders).
+  // How long this wallet has held the coin, in minutes.
+  heldMinutes: number
+  // Minutes still required before it qualifies (0 once qualified).
+  minutesToQualify: number
+  // Odds of winning a given round (1 / qualified holders).
   odds: number
   alreadyWon: boolean
 }
 
 // Deterministic per (address, coin): ~70% of wallets "hold" the coin. Replace
-// with a real indexer lookup { address -> balance } to go live.
+// with a real indexer lookup { address -> balance, firstHeldAt } to go live.
 export function walletEligibility(address: string, coin: Coin): Eligibility {
   const h = hash(address.toLowerCase() + ':' + coin.id)
-  const eligible = h % 10 < 7
-  const balance = eligible ? 500 + ((h >> 4) % 480_000) : 0
+  const holds = h % 10 < 7
+  // Unsigned shifts (>>>) so high-bit hashes never produce negative values.
+  const balance = holds ? 500 + ((h >>> 4) % 480_000) : 0
+  const heldMinutes = holds ? (h >>> 8) % 45 : 0 // 0..44 min held
+  const qualified = holds && heldMinutes >= HOLD_MINUTES
+  const minutesToQualify = holds ? Math.max(0, HOLD_MINUTES - heldMinutes) : HOLD_MINUTES
   const pool = Math.max(1, coin.holderCount)
   return {
-    eligible,
+    holds,
+    qualified,
     balance,
-    odds: eligible ? 1 / pool : 0,
-    alreadyWon: eligible && (h >> 3) % 100 < 4,
+    heldMinutes,
+    minutesToQualify,
+    odds: qualified ? 1 / pool : 0,
+    alreadyWon: qualified && (h >>> 3) % 100 < 4,
   }
 }

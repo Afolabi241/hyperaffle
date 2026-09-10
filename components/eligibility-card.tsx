@@ -1,9 +1,9 @@
 'use client'
 
 import type { Coin } from '@/lib/coins'
-import { walletEligibility, shortAddr } from '@/lib/wallet'
+import { walletEligibility, shortAddr, HOLD_MINUTES } from '@/lib/wallet'
 import { num } from '@/lib/format'
-import { Wallet, CheckCircle2, XCircle, Ticket } from 'lucide-react'
+import { Wallet, CheckCircle2, XCircle, Hourglass } from 'lucide-react'
 
 type Props = {
   coin: Coin
@@ -39,12 +39,43 @@ export function EligibilityCard({ coin, address, onConnect, onDisconnect }: Prop
         </button>
       </div>
 
-      {e.eligible ? (
+      {!e.holds ? (
+        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/40 px-3 py-2.5">
+          <XCircle className="size-4 text-muted-foreground" aria-hidden />
+          <span className="text-sm text-muted-foreground">
+            This wallet holds no {coin.ticker} — hold {coin.ticker} for {HOLD_MINUTES} min to enter the raffle.
+          </span>
+        </div>
+      ) : !e.qualified ? (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2">
+            <Hourglass className="size-4 text-gold" aria-hidden />
+            <span className="text-sm font-semibold text-gold">
+              Qualifying — {e.minutesToQualify} min left
+            </span>
+          </div>
+          <div>
+            <div className="mb-1 flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+              <span>Held {e.heldMinutes} min</span>
+              <span>Need {HOLD_MINUTES} min</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-background">
+              <div
+                className="h-full rounded-full bg-gold transition-all"
+                style={{ width: `${Math.min(100, (e.heldMinutes / HOLD_MINUTES) * 100)}%` }}
+              />
+            </div>
+          </div>
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            Wallets must hold {coin.ticker} for {HOLD_MINUTES} minutes before they enter draws — this blocks last-second buy-ins right before a spin.
+          </p>
+        </div>
+      ) : (
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2">
             <CheckCircle2 className="size-4 text-primary" aria-hidden />
             <span className="text-sm font-semibold text-primary">
-              {e.alreadyWon ? 'Already won this season' : `Eligible for ${coin.ticker} raffle`}
+              {e.alreadyWon ? 'Already won this season' : `Qualified for ${coin.ticker} draws`}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -52,33 +83,24 @@ export function EligibilityCard({ coin, address, onConnect, onDisconnect }: Prop
             <Stat
               label="Win odds / round"
               value={e.alreadyWon ? '—' : `1 in ${num(coin.holderCount)}`}
-              icon
             />
           </div>
           {e.alreadyWon ? (
             <p className="text-[11px] leading-relaxed text-muted-foreground">
-              No wallet wins twice in a season. Your ticket returns when the pool resets.
+              No wallet wins twice in a season. Your entry returns when the pool resets.
             </p>
           ) : null}
-        </div>
-      ) : (
-        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/40 px-3 py-2.5">
-          <XCircle className="size-4 text-muted-foreground" aria-hidden />
-          <span className="text-sm text-muted-foreground">
-            This wallet holds no {coin.ticker} — hold {coin.ticker} to enter the raffle.
-          </span>
         </div>
       )}
     </section>
   )
 }
 
-function Stat({ label, value, icon }: { label: string; value: string; icon?: boolean }) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-border/60 bg-background/40 px-3 py-2">
       <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
       <span className="mt-0.5 flex items-center gap-1 font-mono text-sm font-bold tabular-nums">
-        {icon ? <Ticket className="size-3.5 text-primary" aria-hidden /> : null}
         {value}
       </span>
     </div>

@@ -198,16 +198,12 @@ export function RewardRoom({ coin, coins, market, onBack, wallet, onConnect, onD
               />
             </div>
 
-            <button
-              onClick={draw}
-              disabled={spinning}
-              className="mx-auto mt-6 flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform enabled:hover:scale-[1.03] enabled:active:scale-95 disabled:opacity-50"
-            >
-              <Zap className="size-4" aria-hidden />
-              {spinning ? 'Spinning…' : 'Draw now'}
-            </button>
+            <div className="mx-auto mt-6 flex w-fit items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary">
+              <Zap className={`size-4 ${spinning ? '' : 'animate-pulse'}`} aria-hidden />
+              {spinning ? 'Spinning…' : `Auto-draw in ${mmss(secondsLeft)}`}
+            </div>
             <p className="mt-2 text-center text-[11px] text-muted-foreground">
-              {eligible.length} eligible · past winners removed (no repeat)
+              Draws run automatically on-chain · {eligible.length} eligible · past winners removed (no repeat)
             </p>
           </div>
         </section>
