@@ -182,6 +182,7 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
                 spinId={spinId}
                 winner={currentWinner}
                 onSettled={handleSettled}
+                logoUrl={coin.image}
               />
             </div>
 

@@ -51,8 +51,22 @@ export function WinnerOverlay({ coin, winner, amount, onClose }: Props) {
           <X className="size-5" />
         </button>
 
-        <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-gold text-gold-foreground shadow-[0_0_30px_-4px_var(--color-gold)]">
-          <Trophy className="size-8" aria-hidden />
+        <div className="relative mx-auto size-20">
+          {coin.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={coin.image || "/placeholder.svg"}
+              alt={`${coin.ticker} logo`}
+              className="size-20 rounded-2xl object-cover ring-2 ring-gold shadow-[0_0_36px_-4px_var(--color-gold)]"
+            />
+          ) : (
+            <div className="grid size-20 place-items-center rounded-2xl bg-gold text-gold-foreground shadow-[0_0_30px_-4px_var(--color-gold)]">
+              <Trophy className="size-9" aria-hidden />
+            </div>
+          )}
+          <span className="absolute -bottom-2 -right-2 grid size-9 place-items-center rounded-full bg-gold text-gold-foreground ring-4 ring-background">
+            <Trophy className="size-4.5" aria-hidden />
+          </span>
         </div>
         <p className="mt-4 text-xs font-medium uppercase tracking-[0.2em] text-primary">Winner drawn</p>
         <p className="mt-2 font-mono text-4xl font-extrabold tabular-nums text-glow">{usd(amount, { cents: true })}</p>

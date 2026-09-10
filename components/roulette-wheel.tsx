@@ -9,6 +9,7 @@ type Props = {
   winner: Holder | null
   spinId: number
   onSettled: () => void
+  logoUrl?: string
 }
 
 const MAX_POCKETS = 18
@@ -33,13 +34,30 @@ function sample(pool: Holder[], winner: Holder, count: number) {
   return { pockets: picks, winnerIndex: insertAt }
 }
 
-export function RouletteWheel({ pool, winner, spinId, onSettled }: Props) {
+export function RouletteWheel({ pool, winner, spinId, onSettled, logoUrl }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rotationRef = useRef(0)
   const ballRotRef = useRef(0)
   const pocketsRef = useRef<Holder[]>([])
   const winnerIndexRef = useRef(-1)
   const rafRef = useRef<number | null>(null)
+  const logoRef = useRef<HTMLImageElement | null>(null)
+
+  // Preload the coin logo for the center watermark and redraw once ready.
+  useEffect(() => {
+    if (!logoUrl) {
+      logoRef.current = null
+      return
+    }
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      logoRef.current = img
+      draw(winnerIndexRef.current >= 0)
+    }
+    img.src = logoUrl
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logoUrl])
 
   // Draw a static idle wheel on mount / when pool changes and we are not spinning.
   useEffect(() => {
@@ -138,11 +156,31 @@ export function RouletteWheel({ pool, winner, spinId, onSettled }: Props) {
     ctx.lineWidth = 2
     ctx.stroke()
 
-    // Center spindle.
-    ctx.beginPath()
-    ctx.arc(cx, cy, hub * 0.22, 0, TAU)
-    ctx.fillStyle = brand
-    ctx.fill()
+    // Center logo watermark (stays upright while the wheel spins).
+    const logo = logoRef.current
+    const logoR = hub * 0.66
+    if (logo) {
+      ctx.save()
+      ctx.beginPath()
+      ctx.arc(cx, cy, logoR, 0, TAU)
+      ctx.closePath()
+      ctx.fillStyle = '#0b0f0d'
+      ctx.fill()
+      ctx.clip()
+      ctx.drawImage(logo, cx - logoR, cy - logoR, logoR * 2, logoR * 2)
+      ctx.restore()
+      ctx.beginPath()
+      ctx.arc(cx, cy, logoR, 0, TAU)
+      ctx.strokeStyle = brand
+      ctx.lineWidth = 3
+      ctx.stroke()
+    } else {
+      // Center spindle fallback.
+      ctx.beginPath()
+      ctx.arc(cx, cy, hub * 0.22, 0, TAU)
+      ctx.fillStyle = brand
+      ctx.fill()
+    }
 
     // The ball riding the rim.
     const ballAngle = ballRotRef.current - Math.PI / 2
