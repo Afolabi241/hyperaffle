@@ -7,7 +7,9 @@ import type { Holder } from '@/lib/holders'
 import { usd, num } from '@/lib/format'
 import { RouletteWheel } from './roulette-wheel'
 import { WinnerOverlay } from './winner-overlay'
-import { ArrowLeft, Link2, Users, Gift, Trophy, Zap, Timer } from 'lucide-react'
+import { SecurityPanel } from './security-panel'
+import { claimDaysLeft } from '@/lib/vault'
+import { ArrowLeft, Link2, Users, Gift, Trophy, Zap, Timer, Check, HandCoins } from 'lucide-react'
 
 type Props = {
   coin: Coin
@@ -18,7 +20,7 @@ type Props = {
 
 type Phase = 'idle' | 'spinning' | 'result'
 
-type WinRecord = { holder: Holder; amount: number; at: number }
+type WinRecord = { id: number; holder: Holder; amount: number; at: number; claimed: boolean }
 
 function mmss(total: number): string {
   const m = Math.floor(total / 60)
@@ -82,7 +84,7 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
     settledSpinRef.current = spinId
     setPhase('result')
     if (currentWinner) {
-      const rec: WinRecord = { holder: currentWinner, amount: eco.pot, at: Date.now() }
+      const rec: WinRecord = { id: spinId, holder: currentWinner, amount: eco.pot, at: Date.now(), claimed: false }
       setWinners((prev) => [rec, ...prev].slice(0, 12))
       setWonAddresses((prev) => new Set(prev).add(currentWinner.address))
       setEligible((prev) => {
@@ -99,6 +101,12 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
   }, [currentWinner, eco.pot, allHolders, spinId, roundSeconds])
 
   const spinning = phase === 'spinning'
+
+  // Mirrors the contract's claimRound(): the winner pulls their own prize.
+  // Here it flips local state; on-chain this is a wallet transaction.
+  const claim = useCallback((id: number) => {
+    setWinners((prev) => prev.map((w) => (w.id === id ? { ...w, claimed: true } : w)))
+  }, [])
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
@@ -202,6 +210,8 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
 
         {/* side column */}
         <div className="flex flex-col gap-5">
+          <SecurityPanel potOnChain={eco.pot} />
+
           {/* winners */}
           <section className="rounded-2xl border border-border/70 card-glass p-5">
             <div className="mb-3 flex items-center gap-2">
@@ -217,19 +227,38 @@ export function RewardRoom({ coin, coins, market, onBack }: Props) {
                 {winners.map((w, i) => (
                   <li
                     key={`${w.holder.address}-${w.at}`}
-                    className={`flex items-center justify-between rounded-xl border px-3 py-2 ${
+                    className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2 ${
                       i === 0 ? 'border-primary/40 bg-primary/5' : 'border-border/60 bg-background/40'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="grid size-6 place-items-center rounded-md bg-secondary font-mono text-[10px] text-muted-foreground">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="grid size-6 shrink-0 place-items-center rounded-md bg-secondary font-mono text-[10px] text-muted-foreground">
                         {winners.length - i}
                       </span>
-                      <span className="font-mono text-sm">{w.holder.short}</span>
+                      <div className="min-w-0">
+                        <span className="block truncate font-mono text-sm">{w.holder.short}</span>
+                        <span className="block font-mono text-sm font-bold tabular-nums text-primary">
+                          {usd(w.amount, { compact: true })}
+                        </span>
+                      </div>
                     </div>
-                    <span className="font-mono text-sm font-bold tabular-nums text-primary">
-                      {usd(w.amount, { compact: true })}
-                    </span>
+                    {w.claimed ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
+                        <Check className="size-3" aria-hidden />
+                        Claimed
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => claim(w.id)}
+                        className="inline-flex shrink-0 flex-col items-center rounded-lg bg-primary px-3 py-1 text-[11px] font-semibold text-primary-foreground transition-transform hover:scale-105 active:scale-95"
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          <HandCoins className="size-3" aria-hidden />
+                          Claim
+                        </span>
+                        <span className="text-[9px] font-normal opacity-80">{claimDaysLeft(w.at)}d left</span>
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
