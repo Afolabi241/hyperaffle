@@ -62,15 +62,38 @@ export function RewardRoom({ coin, coins, market, onBack, wallet, onConnect, onD
   phaseRef.current = phase
   const settledSpinRef = useRef(0)
 
-  const draw = useCallback(() => {
+  // The winner is chosen server-side (/api/draw) so the selection logic and
+  // randomness never live in the browser. The server uses the same deterministic
+  // pool, so the returned winner exists in the wheel's local pool.
+  const draw = useCallback(async () => {
     if (phaseRef.current === 'spinning') return
-    const pool = eligible.length ? eligible : allHolders
-    if (pool.length === 0) return
-    const winner = pool[Math.floor(Math.random() * pool.length)]
-    setCurrentWinner(winner)
+    phaseRef.current = 'spinning'
     setPhase('spinning')
-    setSpinId((n) => n + 1)
-  }, [eligible, allHolders])
+    try {
+      const res = await fetch('/api/draw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          coinId: coin.id,
+          holderCount: coin.holderCount,
+          exclude: Array.from(wonAddresses),
+        }),
+      })
+      if (!res.ok) throw new Error('draw failed')
+      const data = (await res.json()) as { winner: Holder | null }
+      if (!data.winner) {
+        setPhase('idle')
+        setSecondsLeft(roundSeconds)
+        return
+      }
+      const winner = allHolders.find((h) => h.address === data.winner!.address) ?? data.winner
+      setCurrentWinner(winner)
+      setSpinId((n) => n + 1)
+    } catch {
+      setPhase('idle')
+      setSecondsLeft(roundSeconds)
+    }
+  }, [coin.id, coin.holderCount, wonAddresses, allHolders, roundSeconds])
 
   // Round countdown → auto draw at zero.
   useEffect(() => {

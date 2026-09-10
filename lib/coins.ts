@@ -119,6 +119,12 @@ export function coinHolders(coin: Coin): Holder[] {
   return makeHolders(coin.holderCount, hashStr(coin.id))
 }
 
+// Same deterministic pool addressed by id + count. Used by the server draw route
+// so its winner exists in the identical pool the client renders on the wheel.
+export function holdersForCoinId(id: string, holderCount: number): Holder[] {
+  return makeHolders(holderCount, hashStr(id))
+}
+
 export type CoinEconomics = {
   volume24h: number
   fees24h: number

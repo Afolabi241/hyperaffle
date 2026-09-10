@@ -1,9 +1,10 @@
 'use client'
 
+import useSWR from 'swr'
 import type { Coin } from '@/lib/coins'
-import { walletEligibility, shortAddr, HOLD_MINUTES } from '@/lib/wallet'
+import { shortAddr, HOLD_MINUTES, type Eligibility } from '@/lib/wallet'
 import { num } from '@/lib/format'
-import { Wallet, CheckCircle2, XCircle, Hourglass } from 'lucide-react'
+import { Wallet, CheckCircle2, XCircle, Hourglass, Loader2 } from 'lucide-react'
 
 type Props = {
   coin: Coin
@@ -12,7 +13,16 @@ type Props = {
   onDisconnect: () => void
 }
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
 export function EligibilityCard({ coin, address, onConnect, onDisconnect }: Props) {
+  // Eligibility is computed server-side (/api/eligibility); the client only
+  // ever receives the result, never the qualification rules.
+  const { data: e, isLoading } = useSWR<Eligibility>(
+    address ? `/api/eligibility?address=${address}&coinId=${coin.id}&holderCount=${coin.holderCount}` : null,
+    fetcher,
+  )
+
   if (!address) {
     return (
       <button
@@ -24,8 +34,6 @@ export function EligibilityCard({ coin, address, onConnect, onDisconnect }: Prop
       </button>
     )
   }
-
-  const e = walletEligibility(address, coin)
 
   return (
     <section className="rounded-2xl border border-border bg-card card-glass p-4">
@@ -39,7 +47,12 @@ export function EligibilityCard({ coin, address, onConnect, onDisconnect }: Prop
         </button>
       </div>
 
-      {!e.holds ? (
+      {isLoading || !e ? (
+        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/40 px-3 py-2.5">
+          <Loader2 className="size-4 animate-spin text-muted-foreground" aria-hidden />
+          <span className="text-sm text-muted-foreground">Checking eligibility…</span>
+        </div>
+      ) : !e.holds ? (
         <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/40 px-3 py-2.5">
           <XCircle className="size-4 text-muted-foreground" aria-hidden />
           <span className="text-sm text-muted-foreground">
