@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { STOCKS } from '@/lib/stocks'
 import { RAFFLE_INTERVALS } from '@/lib/coins'
-import { X, Rocket, Search, Check, Timer, ImagePlus } from 'lucide-react'
+import { START_MCAP, MIGRATION_MCAP, START_VIRTUAL_LIQUIDITY } from '@/lib/curve'
+import { usd } from '@/lib/format'
+import { X, Rocket, Search, Check, Timer, ImagePlus, Droplets } from 'lucide-react'
 
 export type DeployInput = {
   name: string
@@ -212,6 +214,18 @@ export function DeployModal({ open, onClose, onDeploy }: Props) {
         </div>
 
         <div className="border-t border-border/60 px-5 py-4">
+          {/* launch terms — same bonding curve for every coin */}
+          <div className="mb-3 rounded-xl border border-border/60 bg-background/50 p-3">
+            <div className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
+              <Droplets className="size-3.5 text-primary" aria-hidden />
+              Launch terms
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <Term label="Start cap" value={usd(START_MCAP, { compact: true })} />
+              <Term label="Migrates at" value={usd(MIGRATION_MCAP, { compact: true })} />
+              <Term label="Virtual liq." value={usd(START_VIRTUAL_LIQUIDITY, { compact: true })} />
+            </div>
+          </div>
           <button
             disabled={!canDeploy}
             onClick={() => canDeploy && onDeploy({ name: name.trim(), ticker: ticker.trim(), stockSymbol, feeShare: feeShare / 100, raffleInterval, image })}
