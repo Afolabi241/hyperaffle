@@ -114,21 +114,6 @@ export function CoinCard({ coin, coins, market, onSelect }: Props) {
         </span>
         <span>{timeAgo(coin.createdAt)}</span>
       </div>
-        <div className="h-2 overflow-hidden rounded-full bg-secondary">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-primary/70 to-primary transition-all"
-            style={{ width: `${pctFull}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <Users className="size-3.5" aria-hidden />
-          {num(coin.holderCount)} holders
-        </span>
-        <span>{timeAgo(coin.createdAt)}</span>
-      </div>
     </button>
   )
 }
