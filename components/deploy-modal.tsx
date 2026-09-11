@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { STOCKS } from '@/lib/stocks'
 import { RAFFLE_INTERVALS } from '@/lib/coins'
-import { START_MCAP, MIGRATION_MCAP, START_VIRTUAL_LIQUIDITY } from '@/lib/curve'
+import { START_MCAP, MIGRATION_MCAP, VIRTUAL_LIQUIDITY } from '@/lib/curve'
 import { usd } from '@/lib/format'
 import { X, Rocket, Search, Check, Timer, ImagePlus, Droplets } from 'lucide-react'
 
@@ -223,7 +223,7 @@ export function DeployModal({ open, onClose, onDeploy }: Props) {
             <div className="grid grid-cols-3 gap-2 text-center">
               <Term label="Start cap" value={usd(START_MCAP, { compact: true })} />
               <Term label="Migrates at" value={usd(MIGRATION_MCAP, { compact: true })} />
-              <Term label="Virtual liq." value={usd(START_VIRTUAL_LIQUIDITY, { compact: true })} />
+              <Term label="Virtual liq." value={usd(VIRTUAL_LIQUIDITY, { compact: true })} />
             </div>
           </div>
           <button
@@ -236,6 +236,15 @@ export function DeployModal({ open, onClose, onDeploy }: Props) {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function Term({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className="font-mono text-xs font-bold">{value}</span>
     </div>
   )
 }
